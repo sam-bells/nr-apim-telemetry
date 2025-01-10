@@ -1,0 +1,39 @@
+
+<fragment>
+	<set-variable name="jsonPayload" value="@{
+            JArray payloadArray = new JArray(
+                new JObject(
+                    new JProperty("common", new JObject(
+                        new JProperty("attributes", new JObject(
+                            new JProperty("service.name", context.Deployment.ServiceId),
+                            new JProperty("host", "hostExample")
+                        ))
+                    )),
+                    new JProperty("spans", new JArray(
+                        new JObject(
+                            new JProperty("trace.id", context.RequestId),
+                            new JProperty("id", context.RequestId),
+                            new JProperty("attributes", new JObject(
+                                new JProperty("duration.ms", context.Elapsed.TotalMilliseconds),
+                                new JProperty("name", context.Api.Id + context.Operation.Name)
+                            ))
+                        )
+                    ))
+                )
+            );
+            return payloadArray.ToString();
+        }" />
+
+    
+     <send-request mode="new" response-variable-name="auxiliaryResponse">
+            <set-url>https://trace-api.newrelic.com/trace/v1</set-url>
+            <set-method>POST</set-method>
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/json</value>
+            </set-header>
+            <set-header name="Api-Key" exists-action="override">
+                <value>INSERT YOUR INGEST KEY</value>
+            </set-header>
+            <set-body>@((string)context.Variables["jsonPayload"])</set-body>
+        </send-request>
+</fragment>

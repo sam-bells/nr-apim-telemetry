@@ -1,0 +1,45 @@
+<fragment>
+	<log-to-eventhub logger-id="nr-logger">@{
+    JObject logEntry = new JObject(
+        new JProperty("time", String.Format("{0:yyyy-MM-ddTHH:mm:ss.fffK}", context.Timestamp)),
+        new JProperty("callerIpAddress", context.Request.IpAddress),
+        new JProperty("trace.id", context.RequestId),
+        new JProperty("operationName", context.Operation.Name),
+        new JProperty("location", context.Deployment.Region),
+        new JProperty("entity.name", context.Deployment.ServiceId),
+        new JProperty("serviceId", context.Deployment.ServiceId),
+        new JProperty("category", "CustomLogs"),
+        new JProperty("durationMs", context.Elapsed.TotalMilliseconds),
+        new JProperty("Level", "4"),
+        new JProperty("correlationId", context.RequestId),
+        new JProperty("DeploymentVersion", String.Format("{0}/{1}", context.Api.Version ?? "none", context.Api.Revision ?? "none")),
+        new JProperty("properties", new JObject(
+            new JProperty("backendProtocol", context.Request.Url.Scheme),
+            new JProperty("backendUrl", context.Request.Url.ToString()),
+            new JProperty("apiId", context.Api.Id),
+            new JProperty("cache", context.Response.Headers.GetValueOrDefault("Cache-Control","none")),
+            new JProperty("method", context.Request.OriginalMethod),
+            new JProperty("requestSize", (context.Request.Body != null ? context.Request.Body.As<byte[]>(preserveContent: true).Length : 0)),
+            new JProperty("responseSize", (context.Response.Body != null ? context.Response.Body.As<byte[]>(preserveContent: true).Length : 0)),
+            new JProperty("url", context.Request.OriginalUrl.ToString()),
+            new JProperty("backendTime", (context.Variables.ContainsKey("postBackendTimestamp") ? ((TimeSpan)context.Variables["postBackendTimestamp"]).TotalMilliseconds : 0)),
+            new JProperty("backendMethod", context.Request.Method),
+            new JProperty("backendResponseCode", context.Response.StatusCode),
+            new JProperty("clientProtocol", context.Request.OriginalUrl.Scheme),
+            new JProperty("operationId", context.Operation.Id),
+            new JProperty("responseCode", context.Response.StatusCode),
+            new JProperty("apimSubscriptionId", context.Subscription.Id)
+        ))
+    );
+    if (context.LastError != null) {
+        logEntry.Add(new JProperty("error", new JObject(
+            new JProperty("source", context.LastError.Source ?? ""),
+            new JProperty("reason", context.LastError.Reason ?? ""),
+            new JProperty("message", context.LastError.Message ?? ""),
+            new JProperty("scope", context.LastError.Scope ?? ""),
+            new JProperty("policyId", context.LastError.PolicyId ?? "")
+        )));
+    }
+    return logEntry.ToString();
+    }</log-to-eventhub>
+</fragment>

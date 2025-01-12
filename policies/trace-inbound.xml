@@ -1,0 +1,21 @@
+<!-- Capture 'traceparent' header safely as a string -->
+<set-variable name="traceparent" value="@{
+    return (context.Request.Headers.ContainsKey("traceparent") && context.Request.Headers["traceparent"].Length > 0) 
+        ? context.Request.Headers["traceparent"][0] 
+        : string.Empty;
+}" />
+
+<!-- Set 'traceId' based on whether 'traceparent' is available -->
+<set-variable name="traceId" value="@{
+    return !string.IsNullOrEmpty((string)context.Variables["traceparent"]) 
+        ? (string)context.Variables["traceparent"] 
+        : context.RequestId.ToString();
+}" />
+
+<set-header name="traceparent" exists-action="skip">
+		<value>@{
+            return !string.IsNullOrEmpty((string)context.Variables["traceparent"]) 
+                ? (string)context.Variables["traceparent"] 
+                : context.RequestId.ToString();
+        }</value>
+</set-header>

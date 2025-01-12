@@ -1,0 +1,5 @@
+<forward-request>
+    <set-header name="traceparent" exists-action="skip">
+        <value>@(context.Variables["traceId"])</value>
+    </set-header>
+</forward-request>

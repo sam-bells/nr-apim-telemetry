@@ -6,12 +6,12 @@
                     new JProperty("common", new JObject(
                         new JProperty("attributes", new JObject(
                             new JProperty("service.name", context.Deployment.ServiceId),
-                            new JProperty("host", "hostExample")
+                            new JProperty("host", context.Request.OriginalUrl.ToString())
                         ))
                     )),
                     new JProperty("spans", new JArray(
                         new JObject(
-                            new JProperty("trace.id", context.RequestId),
+                            new JProperty("trace.id", context.Variables["traceId"]),
                             new JProperty("id", context.RequestId),
                             new JProperty("attributes", new JObject(
                                 new JProperty("duration.ms", context.Elapsed.TotalMilliseconds),

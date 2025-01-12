@@ -2,12 +2,14 @@
 
 # Overview
 
-This is a guide for instrumenting an Azure API Management with New Relic. The document contains `Experimental` code examples, that were setup as an example and is not production ready. 
+This is a guide for instrumenting an [Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts) with [New Relic](https://docs.newrelic.com/docs/new-relic-solutions/get-started/intro-new-relic/). 
+
+> **Important**: The document contains `Experimental` code examples, that were setup as an example and is not production ready. 
 
 In this guide will cover only the (Experimental) capabilities, rather than the Official capabilities. New Relic can be instrumented for Azure API Management to capture:
 
 1. **Metrics (Official - supported)**: Use the [Azure Integration (Azure Monitor)](https://docs.newrelic.com/docs/infrastructure/microsoft-azure-integrations/get-started/activate-azure-integrations/)
-1. **Diagnostic Settings *(Official - supported)**: Use the Diagnostic Settings and push to the [Azure Log Forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/)
+1. **Diagnostic Settings (Official - supported)**: Use the Diagnostic Settings and push to the [Azure Log Forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/)
 1. **Custom Logs (Experimental)**: Adds a policy fragment to capture custom logs and errors from Azure APIM.
 1. **Distributed Tracing (Experimental)**: Tracks and observes service requests as they flow through distributed systems - [docs](https://docs.newrelic.com/docs/distributed-tracing/concepts/introduction-distributed-tracing/).
 1. **Change Tracking**: New Relic supports publishing a [Change Tracking](https://docs.newrelic.com/docs/change-tracking/change-tracking-introduction/) event. If you've followed the `Traces (Experimental)` guide, it'll create an entity in New Relic, which changes can be published to. This will help track Infrastructure, CORs or other APIM level changes. 
@@ -106,7 +108,7 @@ One challenges with Azure API Management is that Out Of the Box it only supports
 1. Open the Azure Portal and find your API Management instance.
 1. Go to the `Policy Fragement` page and create an API Management Policy Fragement called `nr-trace`.  <br><br>
   ![apim-policy-fragment](.imgs/apim-policy-fragments.png)
-1. Open the file `policies/demo-trace.xml` and update line `35` with your New Relic [ingest key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/) (create a new of if you need) and save the file.
+1. Open the file `policies/publish-trace.xml` and update line `35` with your New Relic [ingest key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/) (create a new of if you need) and save the file.
 1. Copy the contents of the xml file `policies/demo-trace.xml` into the fragment and save it. <br><br>
    ![apim-policy-frag-save](.imgs/fragment-applied.png)
 1. Select an API and add the `nr-trace` snippet to the `outbound` and `on-error` section of the policy. 
@@ -135,6 +137,13 @@ One challenges with Azure API Management is that Out Of the Box it only supports
     </policies>
   ```
 
+#### New Relic View
+
+After testing the setup, if you browse to the New Relic Portal, you should be able to see some distributed traces. If you also followd the `Custom Logs (Experimental)` Guide, it will have logs linked!
+
+![distro-view-nr](.imgs/distributed-traces.png)
+<br><br>
+![logs-linked-to-trace](.imgs/logs-linked-to-trace.png)
 
 ## Support
 
@@ -143,4 +152,3 @@ There is no support for the content in this repository.
 ## Recognition
 
 Recognition of the foundational work done by  [Clarence Bakirtzidis](https://www.linkedin.com/in/clarencebakirtzidis/) (Microsoft Global Black Belt) who got getting parts of this demo previously setup.
-

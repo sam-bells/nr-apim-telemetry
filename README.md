@@ -45,11 +45,13 @@ Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of in
       </backend>
       <!-- Customize the responses -->
       <outbound>
+          <!-- Create a payload to post to the eventhub logger -->
           <include-fragment fragment-id="nr-logger" />
           <base />
       </outbound>
       <!-- Handle exceptions and customize error responses  -->
       <on-error>
+          <!-- Create a payload to post to the eventhub logger -->
           <include-fragment fragment-id="nr-logger" />
           <base />
       </on-error>
@@ -128,13 +130,19 @@ One challenges with Azure API Management is that Out Of the Box it only supports
       </backend>
       <!-- Customize the responses -->
       <outbound>
+           <!-- Publishes a trace to NR directly -->
           <include-fragment fragment-id="nr-trace" />
+
+          <!-- Create a payload to post to the eventhub logger -->
           <include-fragment fragment-id="nr-logger" />
           <base />
       </outbound>
       <!-- Handle exceptions and customize error responses  -->
       <on-error>
+          <!-- Create a payload to post to the eventhub logger -->
           <include-fragment fragment-id="nr-logger" />
+
+          <!-- Publishes a trace to NR directly -->
           <include-fragment fragment-id="nr-trace" />
           <base />
       </on-error>

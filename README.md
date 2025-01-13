@@ -24,6 +24,7 @@ Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of in
 #### Setup
 
 1. Create the [New Relic Azure log forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/) (if it doesn't already exist).
+  ![nr-az-logforwarder-arch](.imgs/blog-diagrams-log-forwarder.drawio.png)
 1. Setup the event forwarder logger on APIM (using rest API): https://azure.github.io/apim-lab/apim-lab/6-analytics-monitoring/analytics-monitoring-6-3-event-hub.html.
   - An example script is provided here: `scripts/apim-logger-setup.sh`.
   Remember to update the variables and perform an `az login` before running the script.
@@ -144,6 +145,15 @@ After testing the setup, if you browse to the New Relic Portal, you should be ab
 ![distro-view-nr](.imgs/distributed-traces.png)
 <br><br>
 ![logs-linked-to-trace](.imgs/logs-linked-to-trace.png)
+
+#### Implementation Notes
+
+Using the fragment to POST the trace to New Relic is just for the pilot. To implement this properly we could:
+
+1. Copy the Log Forwarder code but modify the payload requirements and POST url (from Logs > trace). 
+1. Add a new eventhub to the existing New Relic namespace, so the traces can be processed along side the logs. This will decouple it from the APIM request.
+1. In the traceparent header the `sample` is set to statically collect, which means it'll sample all requests, which can be a lot of data at scale.
+
 
 ## Support
 

@@ -1,21 +1,27 @@
-<!-- Capture 'traceparent' header safely as a string -->
-<set-variable name="traceparent" value="@{
-    return (context.Request.Headers.ContainsKey("traceparent") && context.Request.Headers["traceparent"].Length > 0) 
-        ? context.Request.Headers["traceparent"][0] 
-        : string.Empty;
-}" />
-
-<!-- Set 'traceId' based on whether 'traceparent' is available -->
-<set-variable name="traceId" value="@{
-    return !string.IsNullOrEmpty((string)context.Variables["traceparent"]) 
-        ? (string)context.Variables["traceparent"] 
-        : context.RequestId.ToString();
-}" />
-
-<set-header name="traceparent" exists-action="skip">
-		<value>@{
+<fragment>
+	<!-- Capture 'traceparent' header safely as a string -->
+	<set-variable name="traceparent" value="@{
+            return (context.Request.Headers.ContainsKey("traceparent") && context.Request.Headers["traceparent"].Length > 0) 
+                ? context.Request.Headers["traceparent"][0] 
+                : string.Empty;
+        }" />
+	<!-- Set 'traceId' based on whether 'traceparent' is available -->
+	<set-variable name="traceId" value="@{
             return !string.IsNullOrEmpty((string)context.Variables["traceparent"]) 
                 ? (string)context.Variables["traceparent"] 
-                : context.RequestId.ToString();
-        }</value>
-</set-header>
+                : context.RequestId.ToString().Replace("-", "");
+        }" />
+    <set-variable name="traceId16Characters" value="@(((string)context.Variables["traceId"]).Substring(0, 16))" />
+	<set-header name="traceparent" exists-action="override">
+		<value>@{
+            string traceparent = (string)context.Variables["traceId"];
+            string traceparent16char = (string)context.Variables["traceId16Characters"];
+            
+            var traceId = traceparent; 
+            var parentId = traceparent16char;
+            var flags = "01";  
+
+            return $"00-{traceparent}-{parentId}-{flags}";
+    }</value>
+	</set-header>
+</fragment>

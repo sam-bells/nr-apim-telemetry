@@ -3,7 +3,7 @@
     JObject logEntry = new JObject(
         new JProperty("time", String.Format("{0:yyyy-MM-ddTHH:mm:ss.fffK}", context.Timestamp)),
         new JProperty("callerIpAddress", context.Request.IpAddress),
-        new JProperty("trace.id", context.RequestId),
+        new JProperty("trace.id", context.Variables["traceId"]),
         new JProperty("operationName", context.Operation.Name),
         new JProperty("location", context.Deployment.Region),
         new JProperty("entity.name", context.Deployment.ServiceId),

@@ -24,14 +24,14 @@ Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of in
 #### Setup
 
 1. Create the [New Relic Azure log forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/) (if it doesn't already exist).
-  ![nr-az-logforwarder-arch](.imgs/blog-diagrams-log-forwarder.drawio.png)
+  ![nr-az-logforwarder-arch](.imgs/blog-diagrams-log-forwarder.drawio.png) <br>
 1. Setup the event forwarder logger on APIM (using rest API): https://azure.github.io/apim-lab/apim-lab/6-analytics-monitoring/analytics-monitoring-6-3-event-hub.html.
   - An example script is provided here: `scripts/apim-logger-setup.sh`.
   Remember to update the variables and perform an `az login` before running the script.
 1. Create an API Management Policy Fragment called `nr-logger`. <br><br>
-  ![apim-policy-fragment](.imgs/apim-policy-fragments.png)
+  ![apim-policy-fragment](.imgs/apim-policy-fragments.png) <br>
 1. Copy the contents of the xml file `policies/fragment-full-details.xml` into the fragment and save it. <br><br>
-  ![apim-policy-frag-save](.imgs/fragment-applied.png)
+  ![apim-policy-frag-save](.imgs/fragment-applied.png) <br>
 1. Select an API and add the `nr-logger` snippet to the `outbound` and `on-error` section of the policy. 
   ```xml
     <policies>
@@ -108,15 +108,18 @@ One challenges with Azure API Management is that Out Of the Box it only supports
 
 1. Open the Azure Portal and find your API Management instance.
 1. Go to the `Policy Fragement` page and create an API Management Policy Fragement called `nr-trace`.  <br><br>
-  ![apim-policy-fragment](.imgs/apim-policy-fragments.png)
+  ![apim-policy-fragment](.imgs/apim-policy-fragments.png) <br>
 1. Open the file `policies/publish-trace.xml` and update line `35` with your New Relic [ingest key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/) (create a new of if you need) and save the file.
 1. Copy the contents of the xml file `policies/demo-trace.xml` into the fragment and save it. <br><br>
-   ![apim-policy-frag-save](.imgs/fragment-applied.png)
-1. Select an API and add the `nr-trace` snippet to the `outbound` and `on-error` section of the policy. 
+   ![apim-policy-frag-save](.imgs/fragment-applied.png) <br>
+1. Create a new policy fragmenet called `nr-trace-inbound` and add the contents of `policies/trace-inbound.xml`.
+1. Select an API and add the `<include-fragment fragment-id="nr-trace-inbound" />` into the `inbound` and `<include-fragment fragment-id="nr-trace" />` into the `outbound` and `on-error` section of the policy: <br>
   ```xml
     <policies>
       <!-- Throttle, authorize, validate, cache, or transform the requests -->
       <inbound>
+          <!-- Setups the Tracing variables to use later + traceparent header -->
+          <include-fragment fragment-id="nr-trace-inbound" />
           <base />
       </inbound>
       <!-- Control if and how the requests are forwarded to services  -->
@@ -142,9 +145,8 @@ One challenges with Azure API Management is that Out Of the Box it only supports
 
 After testing the setup, if you browse to the New Relic Portal, you should be able to see some distributed traces. If you also followd the `Custom Logs (Experimental)` Guide, it will have logs linked!
 
-![distro-view-nr](.imgs/distributed-traces.png)
-<br><br>
-![logs-linked-to-trace](.imgs/logs-linked-to-trace.png)
+![distro-view-nr](.imgs/distro-trace-view-nr.png)
+<br>
 
 #### Implementation Notes
 
@@ -161,4 +163,4 @@ There is no support for the content in this repository.
 
 ## Recognition
 
-Recognition of the foundational work done by  [Clarence Bakirtzidis](https://www.linkedin.com/in/clarencebakirtzidis/) (Microsoft Global Black Belt) who got getting parts of this demo previously setup.
+Recognition of the contribution to the logging component policy to [Clarence Bakirtzidis](https://www.linkedin.com/in/clarencebakirtzidis/) (Microsoft Global Black Belt).

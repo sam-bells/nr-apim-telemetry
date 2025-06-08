@@ -32,7 +32,7 @@
             <value>application/json</value>
         </set-header>
         <set-header name="Api-Key" exists-action="override">
-            <value>INSERT YOUR INGEST KEY</value>
+            <value>{{nr-ingest-key}}</value>
         </set-header>
         <set-body>@((string)context.Variables["jsonPayload"])</set-body>
     </send-request>

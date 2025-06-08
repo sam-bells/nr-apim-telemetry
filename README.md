@@ -4,34 +4,36 @@
 
 This is a guide for instrumenting an [Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts) with [New Relic](https://docs.newrelic.com/docs/new-relic-solutions/get-started/intro-new-relic/). 
 
-> **Important**: The document contains `Experimental` code examples, that were setup as an example and is not production ready. 
+> **Important**: The document contains `experimental` code samples, that are provided as an example. 
 
-In this guide will cover only the (Experimental) capabilities, rather than the Official capabilities. New Relic can be instrumented for Azure API Management to capture:
+In this guide will cover only the `experimental` capabilities, rather than the Official capabilities. New Relic can be instrumented for Azure API Management to capture:
 
 1. **Metrics (Official - supported)**: Use the [Azure Integration (Azure Monitor)](https://docs.newrelic.com/docs/infrastructure/microsoft-azure-integrations/get-started/activate-azure-integrations/)
 1. **Diagnostic Settings (Official - supported)**: Use the Diagnostic Settings and push to the [Azure Log Forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/)
 1. **Custom Logs (Experimental)**: Adds a policy fragment to capture custom logs and errors from Azure APIM.
 1. **Distributed Tracing (Experimental)**: Tracks and observes service requests as they flow through distributed systems - [docs](https://docs.newrelic.com/docs/distributed-tracing/concepts/introduction-distributed-tracing/).
-1. **Change Tracking**: New Relic supports publishing a [Change Tracking](https://docs.newrelic.com/docs/change-tracking/change-tracking-introduction/) event. If you've followed the `Traces (Experimental)` guide, it'll create an entity in New Relic, which changes can be published to. This will help track Infrastructure, CORs or other APIM level changes. 
+1. **Change Tracking**: New Relic supports publishing a [Change Tracking](https://docs.newrelic.com/docs/change-tracking/change-tracking-introduction/) event. If you've followed the `Traces (experimental)` guide, it'll create an entity in New Relic, which changes can be published to. This will help track Infrastructure, CORs or other APIM level changes. 
 
 
 ## Guides
 
 ### Custom Logs (Experimental)
 
-Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of information, but it's officially missing key data from an Application level and sometimes there's a need to generate more log information. This guide will cover how to setup an `APIM Fragmenet` to add to your `API Policy` which will create a Message that is published to our `Azure Log Forwarding Solution` (Eventhub > Function).
+Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of information, but it's missing key data from an Application level and sometimes there's a need to decorate or attach additional information. This guide will cover how to setup an `API Management - Policy Fragmenet` that can be added to your `API Policy` to define and publish a **Message** that is published to our `Azure Log Forwarding Solution` (Eventhub > Function).
 
 #### Setup
 
+Before starting, ensure you have an active New Relic account and create an [Ingest - License](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/) key. 
+
 1. Create the [New Relic Azure log forwarder solution](https://docs.newrelic.com/docs/logs/forward-logs/azure-log-forwarding/) (if it doesn't already exist).
   ![nr-az-logforwarder-arch](.imgs/blog-diagrams-log-forwarder.drawio.png) <br>
-1. Setup the event forwarder logger on APIM (using rest API): https://azure.github.io/apim-lab/apim-lab/6-analytics-monitoring/analytics-monitoring-6-3-event-hub.html.
-  - An example script is provided here: `scripts/apim-logger-setup.sh`.
-  Remember to update the variables and perform an `az login` before running the script.
-1. Create an API Management Policy Fragment called `nr-logger`. <br><br>
-  ![apim-policy-fragment](.imgs/apim-policy-fragments.png) <br>
-1. Copy the contents of the xml file `policies/fragment-full-details.xml` into the fragment and save it. <br><br>
-  ![apim-policy-frag-save](.imgs/fragment-applied.png) <br>
+1. Open the file `iac/apimSetup.bicep` (provided in this repository) and fill out the parameters.
+1. Deploy the Bicep module to the `resource group` where APIM is deployed to. <br> <br> Do this via the Azure Portal, AZ CLI or PowerShell.
+    ```PowerShell
+      ## Run the Connect-AzAccount prior to ensure it's logged in
+      New-AzResourceGroupDeployment -Name 'apim-setup' -ResourceGroupName "INSERT_RG_NAME" -TemplateFile ./iac/apimSetup.bicep 
+    ```
+    <br>
 1. Select an API and add the `nr-logger` snippet to the `outbound` and `on-error` section of the policy. 
   ```xml
     <policies>
@@ -61,7 +63,7 @@ Azure Diagnostic Settings provide `Gateway` logs which contain quite a bit of in
 
 ##### Custom Logs - Details
 
-After setting up the Policy Fragment you'll start seeing this data published:
+After setting up the Policy Fragment you'll start seeing this data published (EXAMPLE Below):
 
 ```json
 {
@@ -72,7 +74,7 @@ After setting up the Policy Fragment you'll start seeing this data published:
   "correlationId": "fa611412-c41f-4a27-98b8-20b583230a9b",
   "DeploymentVersion": "none/1",
   "durationMs": 207.77640000000002,
-  "Level": "4",
+  "level": "DEBUG",
   "location": "Australia East",
   "newrelic.source": "api.logs",
   "operationName": "/anything",
@@ -108,13 +110,14 @@ One challenges with Azure API Management is that Out Of the Box it only supports
 
 #### Setup
 
-1. Open the Azure Portal and find your API Management instance.
-1. Go to the `Policy Fragement` page and create an API Management Policy Fragement called `nr-trace`.  <br><br>
-  ![apim-policy-fragment](.imgs/apim-policy-fragments.png) <br>
-1. Open the file `policies/publish-trace.xml` and update line `35` with your New Relic [ingest key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/) (create a new of if you need) and save the file.
-1. Copy the contents of the xml file `policies/demo-trace.xml` into the fragment and save it. <br><br>
-   ![apim-policy-frag-save](.imgs/fragment-applied.png) <br>
-1. Create a new policy fragmenet called `nr-trace-inbound` and add the contents of `policies/trace-inbound.xml`.
+1. Open the file `iac/apimSetup.bicep` and fill out the parameters.
+1. Deploy the Bicep module to the `resource group` where APIM is deployed to. 
+  1. Do this via the Azure Portal, AZ CLI or PowerShell. <br>
+    ```PowerShell
+    ## Run the Connect-AzAccount prior to ensure it's logged in
+    New-AzResourceGroupDeployment -Name 'apim-setup' -ResourceGroupName "INSERT_RG_NAME" -TemplateFile ./iac/apimSetup.bicep 
+    ```
+    <br>
 1. Select an API and add the `<include-fragment fragment-id="nr-trace-inbound" />` into the `inbound` and `<include-fragment fragment-id="nr-trace" />` into the `outbound` and `on-error` section of the policy: <br>
   ```xml
     <policies>
@@ -131,7 +134,7 @@ One challenges with Azure API Management is that Out Of the Box it only supports
       <!-- Customize the responses -->
       <outbound>
            <!-- Publishes a trace to NR directly -->
-          <include-fragment fragment-id="nr-trace" />
+          <include-fragment fragment-id="nr-trace-publish" />
 
           <!-- Create a payload to post to the eventhub logger -->
           <include-fragment fragment-id="nr-logger" />
@@ -143,7 +146,7 @@ One challenges with Azure API Management is that Out Of the Box it only supports
           <include-fragment fragment-id="nr-logger" />
 
           <!-- Publishes a trace to NR directly -->
-          <include-fragment fragment-id="nr-trace" />
+          <include-fragment fragment-id="nr-trace-publish" />
           <base />
       </on-error>
     </policies>
@@ -151,14 +154,26 @@ One challenges with Azure API Management is that Out Of the Box it only supports
 
 #### New Relic View
 
-After testing the setup, if you browse to the New Relic Portal, you should be able to see some distributed traces. If you also followd the `Custom Logs (Experimental)` Guide, it will have logs linked!
+After testing the setup, if you browse to the New Relic Portal, you should be able to see some distributed traces. If you also followed the `Custom Logs (Experimental)` guide, it will have logs linked!
 
 ![distro-view-nr](.imgs/distro-trace-view-nr.png)
 <br>
 
+#### Demo
+
+This repo comes with a demo API deployable via a bicep. To deploy the demo:
+
+1. Ensure you have the Azure Log Forwarder deployed. 
+1. Fill out the parameters in the `apimSetup.bicep` module then deploy it.
+1. Deploy the `demoApi.bicep` module. 
+
+This will provision a demo api called `nr-demo-basic-api` which will publish logs & traces to New Relic.
+
+![demo-api](.imgs/demo-api.png)
+
 #### Implementation Notes
 
-Using the fragment to POST the trace to New Relic is just for the pilot. To implement this properly we could:
+Using the API Management `policy fragment` to POST the trace to New Relic is just for the pilot. To implement this properly we could:
 
 1. Copy the Log Forwarder code but modify the payload requirements and POST url (from Logs > trace). 
 1. Add a new eventhub to the existing New Relic namespace, so the traces can be processed along side the logs. This will decouple it from the APIM request.

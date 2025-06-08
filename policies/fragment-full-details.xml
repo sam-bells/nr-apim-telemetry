@@ -10,7 +10,7 @@
         new JProperty("serviceId", context.Deployment.ServiceId),
         new JProperty("category", "CustomLogs"),
         new JProperty("durationMs", context.Elapsed.TotalMilliseconds),
-        new JProperty("Level", "4"),
+        new JProperty("level", "DEBUG"),
         new JProperty("correlationId", context.RequestId),
         new JProperty("DeploymentVersion", String.Format("{0}/{1}", context.Api.Version ?? "none", context.Api.Revision ?? "none")),
         new JProperty("properties", new JObject(
